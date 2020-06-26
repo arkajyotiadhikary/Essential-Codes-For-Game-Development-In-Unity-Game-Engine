@@ -1,0 +1,10 @@
+void _changePivot(GameObject block, Vector3 position)
+    {
+        Vector3 offset = block.transform.localPosition - position;
+
+        foreach(Transform child in block.transform)
+        {
+            child.position += offset; 
+        }
+        block.transform.localPosition = position;
+    }
