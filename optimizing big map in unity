@@ -1,0 +1,49 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class dissableGround : MonoBehaviour
+{
+    GameObject[] grounds;
+
+    public float maxDistance;
+    public float calculatedDistance;
+
+    public Transform Player;
+
+    public Vector3 singleGrounddistance;
+
+    private void Start()
+    {
+        grounds = GameObject.FindGameObjectsWithTag("Ground");        
+    }
+
+    void _calculateDistance()
+    {
+        foreach(GameObject ground in grounds)
+        {
+            Vector3 groundSize = ground.transform.localScale;
+            Vector3 groundDistance = ground.transform.position+(singleGrounddistance/5f);
+
+            float xDistance = Mathf.Abs(groundDistance.x-Player.position.x);
+            float zDistance = Mathf.Abs(groundDistance.z-Player.position.z);
+
+            calculatedDistance = xDistance+zDistance;
+
+            if(calculatedDistance>maxDistance)
+            {
+                ground.GetComponent<MeshRenderer>().enabled = false;
+            }
+            else
+            {
+                ground.GetComponent<MeshRenderer>().enabled = true;
+            }
+        }
+    }
+
+    private void FixedUpdate()
+    {
+        
+        _calculateDistance();   
+    }
+}
