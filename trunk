@@ -1,0 +1,251 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class Trunk : MonoBehaviour
+{
+# region Variables
+
+#region bool
+    bool Xrot,Yrot,Zrot;
+#endregion
+    
+
+
+#region gameobject
+    public GameObject trunkBlock;
+    GameObject insTrunk;
+    GameObject block; 
+#endregion
+
+
+
+#region components
+    Mesh trunkMesh;
+#endregion
+
+
+
+#region transform  
+    public Transform trunk;
+#endregion
+
+
+
+#region int
+    public int noOfblock;
+    public int count = 0;
+    public int rotationCount = 0;
+    public int rotationFrequancy;
+#endregion
+
+
+
+#region flaot 
+    float radiusReducer = 0;
+    float rotx;
+    float roty;
+    float rotz;
+    float blockHeight;
+    public float a,b,c,d;
+
+#endregion
+
+
+
+#region vector3
+    Vector3 blockSpawnPos = Vector3.zero;
+    Vector3 spawnPosition = Vector3.zero;
+    public Vector3[] vertices = new Vector3[24] ;
+    Vector3[] prevBlock = new Vector3[24];
+    Vector3 additionalHeight = Vector3.zero;
+
+#endregion
+
+
+
+#region quaternion
+    public Quaternion blockRotation;
+#endregion
+
+#endregion
+
+
+
+
+    private void Start()
+    {
+        _spawnTrunkblocks();
+    }
+
+
+
+    void _spawnTrunkblocks()
+    {
+        for(var i = 0; i < noOfblock; i++ )
+       {
+            blockSpawnPos = trunk.position;
+
+            blockHeight = trunkBlock.transform.localScale.y*i;
+
+            additionalHeight = new Vector3(0,blockHeight,0);
+
+            if(rotationCount == 0)
+            {
+                rotx = Random.Range(-45,45); 
+                roty = Random.Range(-5,5);
+                rotz = Random.Range(-45,45);
+            }
+
+            blockRotation = Quaternion.Euler(rotx,roty,rotz);
+            spawnPosition = blockSpawnPos +additionalHeight;
+
+            if(rotationCount >= rotationFrequancy)
+            {
+                rotationCount = 0;
+            }
+            else
+            {
+                rotationCount += 1;
+            }
+            
+            block = Instantiate(trunkBlock,spawnPosition ,blockRotation,trunk);
+
+
+            _matchingVertices();
+
+        }        
+    }
+
+
+
+
+    void _matchingVertices()
+    {
+        trunkMesh = block.GetComponent<MeshFilter>().mesh;
+
+        vertices = trunkMesh.vertices;
+        
+        _upsurfaceCalculation();
+
+       
+
+        if(count != 0)
+        {
+            _bottomVertices();
+        }
+         for(var i = 0;i<vertices.Length;i++)
+        {
+            prevBlock[i] = block.transform.TransformPoint(vertices[i]);
+        }
+       
+       
+        trunkMesh.vertices = vertices;
+        trunkMesh.RecalculateBounds();
+        count += 1;
+    }
+
+
+
+
+    void _bottomVertices()
+    {
+        vertices[0] = prevBlock[5];
+        vertices[0] = block.transform.InverseTransformPoint(vertices[0]);
+
+        vertices[1] = prevBlock[4];
+        vertices[1] = block.transform.InverseTransformPoint(vertices[1]);
+
+        vertices[6] = prevBlock[9];
+        vertices[6] = block.transform.InverseTransformPoint(vertices[6]);
+
+        vertices[7] = prevBlock[8];
+        vertices[7] = block.transform.InverseTransformPoint(vertices[7]);
+
+        vertices[12] = prevBlock[9];
+        vertices[12] = block.transform.InverseTransformPoint(vertices[12]);
+
+        vertices[13] = prevBlock[5];
+        vertices[13] = block.transform.InverseTransformPoint(vertices[13]);
+
+        vertices[14] = prevBlock[4];
+        vertices[14] = block.transform.InverseTransformPoint(vertices[14]);
+
+        vertices[15] = prevBlock[8];
+        vertices[15] = block.transform.InverseTransformPoint(vertices[15]);
+
+        vertices[16] = prevBlock[4];
+        vertices[16] = block.transform.InverseTransformPoint(vertices[16]);
+
+        vertices[19] = prevBlock[8];
+        vertices[19] = block.transform.InverseTransformPoint(vertices[19]);
+
+        vertices[20] = prevBlock[9];
+        vertices[20] = block.transform.InverseTransformPoint(vertices[20]);
+
+        vertices[23] = prevBlock[5];
+        vertices[23] = block.transform.InverseTransformPoint(vertices[23]);
+    }
+
+
+
+    public void _upsurfaceCalculation()
+    {
+        Vector3[] upSurface = new Vector3[4];
+        
+
+        upSurface[0] =  vertices[4];
+        upSurface[1] =  vertices[5];
+        upSurface[2] =  vertices[9];
+        upSurface[3] =  vertices[8];
+
+
+
+        a = (upSurface[0].x-upSurface[1].x);
+        b = (upSurface[1].z-upSurface[2].z);
+        c = (upSurface[2].x-upSurface[3].x);
+        d = (upSurface[3].z-upSurface[0].z);
+
+
+        a = Mathf.Sqrt(0.45f - radiusReducer);
+        b = Mathf.Sqrt(0.45f - radiusReducer);
+        c = Mathf.Sqrt(0.45f - radiusReducer);
+        d = Mathf.Sqrt(0.45f - radiusReducer);
+
+        radiusReducer += 0.05f;
+
+        upSurface[0].x = -a/2;
+        upSurface[1].x = a/2;
+
+        upSurface[1].z = b/2 ;
+        upSurface[2].z = -b/2 ;
+
+        upSurface[2].x = -c/2 ;
+        upSurface[3].x = c/2 ;
+
+        upSurface[3].z = -d/2 ;
+        upSurface[0].z = d/2 ;
+
+
+        vertices[3] = upSurface[0];
+        vertices[17] = upSurface[0];
+        vertices[4] = upSurface[0];
+
+        vertices[2] = upSurface[1];
+        vertices[5] = upSurface[1];
+        vertices[22] = upSurface[1];
+
+        vertices[8] = upSurface[2];
+        vertices[11] = upSurface[2];
+        vertices[18] = upSurface[2];
+
+        vertices[9] = upSurface[3];
+        vertices[10] = upSurface[3];
+        vertices[21] = upSurface[3];
+
+         
+        trunkMesh.vertices = vertices;
+        trunkMesh.RecalculateBounds();
+    }
+}
+
